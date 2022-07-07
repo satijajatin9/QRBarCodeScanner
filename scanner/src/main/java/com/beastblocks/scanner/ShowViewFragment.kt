@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class ShowViewFragment : BottomSheetDialogFragment {
-    var Views: Any? = null
-    var BarQRScanner: BarQRScanner
+    private var Views: Any? = null
+    private var BarQRScanner: BarQRScanner
 
     constructor(view: Int, barQRScanner: BarQRScanner) {
         Views = view
@@ -25,17 +25,17 @@ class ShowViewFragment : BottomSheetDialogFragment {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        var vv: View
+        var finalView: View
         if (Views is Int) {
-            vv = inflater.inflate(Views as Int, container, false)
+            finalView = inflater.inflate(Views as Int, container, false)
         } else {
-            vv = Views as View
+            finalView = Views as View
         }
-        return vv
+        return finalView
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        BarQRScanner.DataShowing=false
+        BarQRScanner.DataShowing = false
     }
 }

@@ -24,10 +24,7 @@ import android.util.Size
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.animation.AccelerateDecelerateInterpolator
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RelativeLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -573,26 +570,41 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
         view: View,
         fragmentManager: FragmentManager,
         barQRScanner: BarQRScanner
-    ): ShowViewFragment? {
+    ): View? {
         if (!DataShowing) {
             DataShowing = true
             showViewFragment = ShowViewFragment(view, barQRScanner)
             showViewFragment!!.show(fragmentManager, "ShowView")
         }
-        return showViewFragment!!
+        return showViewFragment!!.view
+    }
+    fun showDialogFragment(
+        data: String,
+        fragmentManager: FragmentManager,
+        barQRScanner: BarQRScanner
+    ): View? {
+        if (!DataShowing) {
+            DataShowing = true
+            var view = TextView(context)
+            view.text = data
+            view.setPadding(10,10,10,10)
+            showViewFragment = ShowViewFragment(view, barQRScanner)
+            showViewFragment!!.show(fragmentManager, "ShowView")
+        }
+        return showViewFragment!!.view
     }
 
     fun showDialogFragment(
         view: Int,
         fragmentManager: FragmentManager,
         barQRScanner: BarQRScanner
-    ): ShowViewFragment? {
+    ): View? {
         if (!DataShowing) {
             DataShowing = true
             showViewFragment = ShowViewFragment(view, barQRScanner)
             showViewFragment!!.show(fragmentManager, "ShowView")
         }
-        return showViewFragment!!
+        return showViewFragment!!.view
     }
 
     fun getViewFragment(): ShowViewFragment? {

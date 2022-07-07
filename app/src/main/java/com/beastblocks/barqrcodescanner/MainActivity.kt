@@ -36,10 +36,7 @@ class MainActivity : AppCompatActivity(), QRCodeFoundListener {
         if (barQRScanner.GALLERY == requestCode && resultCode == RESULT_OK && data != null) {
             val QRCodeData: String? = barQRScanner.ScanImage(data!!)
             if (!QRCodeData.isNullOrEmpty()) {
-                var view = TextView(this)
-                view.text = QRCodeData
-                showViewFragment =
-                    barQRScanner.showDialogFragment(view, supportFragmentManager, barQRScanner)!!
+                showViewFragment = barQRScanner.showDialogFragment(QRCodeData, supportFragmentManager, barQRScanner)!!
             }
         }
     }
