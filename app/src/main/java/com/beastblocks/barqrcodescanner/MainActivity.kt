@@ -16,9 +16,8 @@ class MainActivity : AppCompatActivity(), QRCodeFoundListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         barQRScanner = findViewById(R.id.barcodescanner)
-        barQRScanner.init(this,true, true)
+        barQRScanner.init(this,this,true, true)
         barQRScanner.enableHapticFeedback(true)
-        barQRScanner.setQRCodeScannerListener(this)
     }
 
     override fun onQRCodeFound(qrCode: String?) {

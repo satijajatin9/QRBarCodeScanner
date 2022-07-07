@@ -1,6 +1,9 @@
 package com.beastblocks.scanner
 
 import android.Manifest
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -9,6 +12,8 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.net.Uri
@@ -17,9 +22,17 @@ import android.provider.Settings
 import android.util.AttributeSet
 import android.util.Size
 import android.view.View
-import android.widget.*
+import android.view.ViewTreeObserver
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
+import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.camera.core.*
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat.startActivityForResult
@@ -29,7 +42,6 @@ import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
-import java.lang.Exception
 import java.util.concurrent.ExecutionException
 
 
@@ -62,14 +74,17 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
     private var BottomBlack: View? = null
     private var LeftBlack: View? = null
 
-    private var CenterBlankSpace: View? = null
+    private var CenterBlankSpace: RelativeLayout? = null
+    private var CenterBar: View? = null
     private var ParentLay: LinearLayout? = null
     private var FunctionsLay: LinearLayout? = null
 
     private var ScannerHeight = 700
     private var ExtraWidth = 10
+    private var ScanBarHeight = 100
     private var hapticFeedback = false
     private var BorderColor = R.color.white
+    private var ScanBarColor = Color.LTGRAY
     private var galleryEnabled = false
     private var flashEnabled = false
     internal var DataShowing = false
@@ -98,15 +113,19 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
 
     fun init(
         act: Activity,
+        Listener: QRCodeFoundListener? = null,
         FlashEnabled: Boolean = false,
         GalleryEnabled: Boolean = false,
-        borderColor: Int = R.color.white
+        borderColor: Int = R.color.white,
+        scanBarColor: Int = Color.LTGRAY
+
     ) {
         activity = act
         flashEnabled = FlashEnabled
         galleryEnabled = GalleryEnabled
         BorderColor = borderColor
-        flashEnabled = FlashEnabled
+        ScanBarColor = scanBarColor
+        listener = Listener
         designView(context)
     }
 
@@ -139,7 +158,8 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
         BottomBlack = View(context)
         LeftBlack = View(context)
 
-        CenterBlankSpace = View(context)
+        CenterBlankSpace = RelativeLayout(context)
+        CenterBar = View(context)
         ParentLay = LinearLayout(context)
         FunctionsLay = LinearLayout(context)
         Flash = ImageView(context)
@@ -167,6 +187,8 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
         LeftBlack?.setBackgroundColor(resources.getColor(R.color.black))
         LeftBlack?.alpha = 0.5f
 
+        CenterBar?.setBackgroundDrawable(scanningDrawable(ScanBarColor))
+
         TopLine?.setBackgroundColor(resources.getColor(BorderColor))
         BottomLine?.setBackgroundColor(resources.getColor(BorderColor))
         RightLine?.setBackgroundColor(resources.getColor(BorderColor))
@@ -188,6 +210,7 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
         LeftLay?.addView(LeftLine)
         CenterScanLay?.addView(LeftLay)
 
+        CenterBlankSpace?.addView(CenterBar)
         CenterScanLay?.addView(CenterBlankSpace)
 
 
@@ -293,6 +316,7 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
         LeftLay?.layoutParams =
             LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f)
         CenterBlankSpace?.layoutParams = LinearLayout.LayoutParams(ScannerHeight, ScannerHeight)
+        CenterBar?.layoutParams = LayoutParams(ScannerHeight, ScanBarHeight)
 
     }
 
@@ -386,6 +410,7 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
             try {
                 cameraProvider = cameraProviderFuture!!.get()
                 startCameraAnalyzer()
+                startAnimation()
             } catch (e: ExecutionException) {
                 Toast.makeText(
                     context,
@@ -479,7 +504,7 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
             if (hapticFeedback && !DataShowing) {
                 vibrate()
             }
-        }catch (e:Exception){
+        } catch (e: Exception) {
         }
         return contents
     }
@@ -570,16 +595,18 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
         return showViewFragment!!
     }
 
-    fun setQRCodeScannerListener(qrCodeFoundListener: QRCodeFoundListener) {
-        listener = qrCodeFoundListener
-    }
-
     fun getViewFragment(): ShowViewFragment? {
         return showViewFragment
     }
 
     fun setScanBoxHeightWidth(value: Int) {
         ScannerHeight = value
+        setLayoutParams()
+    }
+
+
+    fun setScanBarHeightWidth(value: Int) {
+        ScanBarHeight = value
         setLayoutParams()
     }
 
@@ -600,4 +627,50 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
         parcelFileDescriptor.close()
         return image
     }
+
+    private fun startAnimation() {
+        val vto: ViewTreeObserver = CenterBlankSpace!!.getViewTreeObserver()
+        vto.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            @SuppressLint("ObjectAnimatorBinding")
+            override fun onGlobalLayout() {
+                CenterBlankSpace!!.getViewTreeObserver().removeGlobalOnLayoutListener(this)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                    CenterBlankSpace!!.getViewTreeObserver().removeGlobalOnLayoutListener(this)
+                } else {
+                    CenterBlankSpace!!.getViewTreeObserver().removeOnGlobalLayoutListener(this)
+                }
+                val destination = (CenterBlankSpace!!.getY() +
+                        CenterBlankSpace!!.getHeight()) as Float
+                var animator = ObjectAnimator.ofFloat(
+                    CenterBar, "translationY",
+                    CenterBlankSpace!!.getY(),
+                    destination
+                )
+                animator.setRepeatMode(ValueAnimator.REVERSE)
+                animator.setRepeatCount(ValueAnimator.INFINITE)
+                animator.setInterpolator(AccelerateDecelerateInterpolator())
+                animator.setDuration(3000)
+                animator.start()
+            }
+        })
+    }
+
+    private fun scanningDrawable(
+        bgColor: Int
+    ): GradientDrawable {
+        val drawable = GradientDrawable().apply {
+            colors = intArrayOf(
+                Color.TRANSPARENT,
+                Color.TRANSPARENT,
+                bgColor,
+                Color.TRANSPARENT,
+                Color.TRANSPARENT
+            )
+            orientation = GradientDrawable.Orientation.TOP_BOTTOM
+            gradientType = GradientDrawable.LINEAR_GRADIENT
+            shape = GradientDrawable.RECTANGLE
+        }
+        return drawable
+    }
+
 }
