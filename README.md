@@ -9,7 +9,7 @@
      maven { url "https://jitpack.io" }
  }
  dependencies {
-     implementation 'com.github.satijajatin9:QRBarCodeScanner:1.0.0'
+     implementation 'com.github.satijajatin9:QRBarCodeScanner:1.0.1'
  }
 ```
 * Add BarQRScanner in your layout resource
