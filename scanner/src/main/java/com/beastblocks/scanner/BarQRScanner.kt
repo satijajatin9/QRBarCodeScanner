@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -40,7 +41,6 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
 import java.util.concurrent.ExecutionException
-
 
 class BarQRScanner : RelativeLayout, View.OnClickListener {
 
@@ -569,42 +569,45 @@ class BarQRScanner : RelativeLayout, View.OnClickListener {
     fun showDialogFragment(
         view: View,
         fragmentManager: FragmentManager,
-        barQRScanner: BarQRScanner
-    ): View? {
+        barQRScanner: BarQRScanner,
+        listener:CreateFragmentListener
+    ): ShowViewFragment? {
         if (!DataShowing) {
             DataShowing = true
-            showViewFragment = ShowViewFragment(view, barQRScanner)
+            showViewFragment = ShowViewFragment(view, barQRScanner,listener)
             showViewFragment!!.show(fragmentManager, "ShowView")
         }
-        return showViewFragment!!.view
+        return showViewFragment!!
     }
     fun showDialogFragment(
         data: String,
         fragmentManager: FragmentManager,
-        barQRScanner: BarQRScanner
-    ): View? {
+        barQRScanner: BarQRScanner,
+        listener:CreateFragmentListener
+    ): ShowViewFragment? {
         if (!DataShowing) {
             DataShowing = true
             var view = TextView(context)
             view.text = data
             view.setPadding(10,10,10,10)
-            showViewFragment = ShowViewFragment(view, barQRScanner)
+            showViewFragment = ShowViewFragment(view, barQRScanner,listener)
             showViewFragment!!.show(fragmentManager, "ShowView")
         }
-        return showViewFragment!!.view
+        return showViewFragment!!
     }
 
     fun showDialogFragment(
         view: Int,
         fragmentManager: FragmentManager,
-        barQRScanner: BarQRScanner
-    ): View? {
+        barQRScanner: BarQRScanner,
+        listener:CreateFragmentListener
+    ): ShowViewFragment? {
         if (!DataShowing) {
             DataShowing = true
-            showViewFragment = ShowViewFragment(view, barQRScanner)
+            showViewFragment = ShowViewFragment(view, barQRScanner,listener)
             showViewFragment!!.show(fragmentManager, "ShowView")
         }
-        return showViewFragment!!.view
+        return showViewFragment!!
     }
 
     fun getViewFragment(): ShowViewFragment? {

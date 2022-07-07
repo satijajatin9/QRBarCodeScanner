@@ -9,15 +9,19 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 class ShowViewFragment : BottomSheetDialogFragment {
     private var Views: Any? = null
     private var BarQRScanner: BarQRScanner
+    private var Listener: CreateFragmentListener
+    var finalView: View?=null
 
-    constructor(view: Int, barQRScanner: BarQRScanner) {
+    constructor(view: Int, barQRScanner: BarQRScanner,listener: CreateFragmentListener) {
         Views = view
         BarQRScanner = barQRScanner
+        Listener = listener
     }
 
-    constructor(view: View, barQRScanner: BarQRScanner) {
+    constructor(view: View, barQRScanner: BarQRScanner,listener: CreateFragmentListener) {
         Views = view
         BarQRScanner = barQRScanner
+        Listener = listener
     }
 
     override fun onCreateView(
@@ -25,12 +29,12 @@ class ShowViewFragment : BottomSheetDialogFragment {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        var finalView: View
         if (Views is Int) {
             finalView = inflater.inflate(Views as Int, container, false)
         } else {
             finalView = Views as View
         }
+        Listener.onViewCreated(finalView!!)
         return finalView
     }
 
